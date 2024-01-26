@@ -10,6 +10,7 @@ import zio.aws.s3._
 import zio.aws.core.config._
 import zio.aws.netty._
 import zio.aws.http4s._
+import zio.aws.http4sEmber._
 import zio.aws.akkahttp._
 import software.amazon.awssdk.auth.credentials.{
   AwsBasicCredentials,
@@ -25,6 +26,7 @@ import zio.test._
 object S3Tests extends ZIOSpecDefault with Logging with Retries {
   val nettyClient = NettyHttpClient.default
   val http4sClient = Http4sClient.default
+  val http4sEmberClient = Http4sEmberClient.default
 
   val actorSystem =
     ZLayer.scoped(
@@ -150,6 +152,13 @@ object S3Tests extends ZIOSpecDefault with Logging with Retries {
         tests("http4s"): _*
       ).provideCustom(
         http4sClient,
+        awsConfig,
+        s3Client
+      ) @@ sequential,
+      suite("with http4sEmber")(
+        tests("http4sEmber"): _*
+      ).provideCustom(
+        http4sEmberClient,
         awsConfig,
         s3Client
       ) @@ sequential,

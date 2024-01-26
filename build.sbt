@@ -16,7 +16,7 @@ Global / pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
 
 lazy val root = Project("zio-aws", file(".")).settings(
   publishArtifact := false
-) aggregate (core, http4s, netty, akkahttp, docs)
+) aggregate (core, http4s, ember, netty, akkahttp, docs)
 
 lazy val core = Project("zio-aws-core", file("zio-aws-core"))
   .settings(
@@ -40,6 +40,21 @@ lazy val http4s = Project("zio-aws-http4s", file("zio-aws-http4s"))
     libraryDependencies ++= Seq(
       "org.http4s" %% "http4s-dsl" % http4sVersion,
       "org.http4s" %% "http4s-blaze-client" % blazeVersion,
+      "software.amazon.awssdk" % "http-client-spi" % awsVersion,
+      "dev.zio" %% "zio" % zioVersion,
+      "dev.zio" %% "zio-interop-cats" % zioCatsInteropVersion,
+      "co.fs2" %% "fs2-reactive-streams" % fs2Version,
+      "org.typelevel" %% "cats-effect" % catsEffectVersion,
+      "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
+    )
+  )
+  .dependsOn(core)
+
+lazy val ember = Project("zio-aws-http4s-ember", file("zio-aws-http4s-ember"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.http4s" %% "http4s-dsl" % http4sVersion,
+      "org.http4s" %% "http4s-ember-client" % emberVersion,
       "software.amazon.awssdk" % "http-client-spi" % awsVersion,
       "dev.zio" %% "zio" % zioVersion,
       "dev.zio" %% "zio-interop-cats" % zioCatsInteropVersion,
@@ -131,6 +146,7 @@ lazy val integtests = Project("integtests", file("integtests"))
   .dependsOn(
     core,
     http4s,
+    ember,
     netty,
     akkahttp,
     LocalProject("zio-aws-s3"),
@@ -166,6 +182,7 @@ lazy val docs = project
   .dependsOn(
     core,
     http4s,
+    ember,
     netty,
     akkahttp,
     LocalProject("zio-aws-elasticbeanstalk"),
