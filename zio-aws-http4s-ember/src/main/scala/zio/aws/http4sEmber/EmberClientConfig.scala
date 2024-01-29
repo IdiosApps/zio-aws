@@ -1,12 +1,10 @@
 package zio.aws.http4sEmber
 
-import org.http4s.headers.`User-Agent`
-
 import scala.concurrent.duration.Duration
 
 case class EmberClientConfig(
-    timeout: Duration
-//    idleTimeout: Duration,
+    timeout: Duration,
+    idleTimeout: Duration,
 //    requestTimeout: Duration,
 //    connectTimeout: Duration,
 //    userAgent: `User-Agent`,

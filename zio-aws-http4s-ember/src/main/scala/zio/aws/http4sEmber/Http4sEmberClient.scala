@@ -177,16 +177,21 @@ object Http4sEmberClient {
       copy()(runtime)
 
     private def createClient(): Resource[Task, Client[Task]] = {
-      customization(
-        EmberClientBuilder[Task].withExecutionContext(
-          Unsafe.unsafe { implicit u =>
-            runtime.unsafe
-              .run(ZIO.executor.map(_.asExecutionContext))
-              .getOrThrowFiberFailure()
-          }
-        )
-      ).resource
+        EmberClientBuilder.default[Task]
+          .build
     }
+
+//    private def createClient(): Resource[Task, Client[Task]] = {
+//      customization(
+//        EmberClientBuilder[Task].withExecutionContext(
+//          Unsafe.unsafe { implicit u =>
+//            runtime.unsafe
+//              .run(ZIO.executor.map(_.asExecutionContext))
+//              .getOrThrowFiberFailure()
+//          }
+//        )
+//      ).resource
+//    }
 
     override def buildWithDefaults(
         serviceDefaults: AttributeMap
@@ -202,7 +207,7 @@ object Http4sEmberClient {
       )
     }
 
-    def toScoped: ZIO[Scope, Throwable, Http4sClient] = {
+    def toScoped: ZIO[Scope, Throwable, Http4sEmberClient] = {
       resources.map { case (dispatcher, client) =>
         implicit val d: Dispatcher[Task] = dispatcher
         new Http4sEmberClient(client, () => ())
@@ -247,20 +252,21 @@ object Http4sEmberClient {
       asynchronousChannelGroup: Option[AsynchronousChannelGroup] = None,
       additionalSocketOptions: Seq[OptionValue[_]] = Seq.empty
   ): ZLayer[
-    _root_.zio.aws.http4s.BlazeClientConfig,
+    _root_.zio.aws.http4sEmber.EmberClientConfig,
     Throwable,
     HttpClient
   ] =
     ZLayer.scoped {
       ZIO
-        .service[_root_.zio.aws.http4s.BlazeClientConfig]
+        .service[_root_.zio.aws.http4sEmber.EmberClientConfig]
         .flatMap { config =>
           ZIO.runtime.flatMap { implicit runtime: Runtime[Any] =>
             // https://http4s.org/v1.0/api/org/http4s/ember/client/EmberClientBuilder.html
             Http4sEmberClient
               .Http4sEmberClientBuilder(
                 _.withTimeout(config.timeout)
-                  .withUserAgent(config.userAgent)
+                  .withIdleConnectionTime(config.idleTimeout)
+//                  .withUserAgent(config.userAgent)
 //                  .withMaxTotalConnections(config.maxTotalConnections)
 //                  .withMaxWaitQueueLimit(config.maxWaitQueueLimit)
 //                  .withCheckEndpointAuthentication(
